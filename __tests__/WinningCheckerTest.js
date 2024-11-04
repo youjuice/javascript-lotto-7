@@ -13,9 +13,6 @@ describe('WinningChecker 클래스 테스트', () => {
         const winningLotto = new Lotto(winningNumbers);
         const purchasedLotto = new Lotto(purchasedNumbers);
         const checker = new WinningChecker(winningLotto, bonusNumber);
-
-        const matchCount = checker.checkLotto(purchasedLotto);
-        const hasBonus = checker.hasBonus(purchasedLotto);
         const result = checker.createWinningStatistics([purchasedLotto]);
 
         if (expectedRank) {
