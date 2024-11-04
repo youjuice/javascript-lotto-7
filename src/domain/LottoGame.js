@@ -4,6 +4,7 @@ import WinningChecker from './WinningChecker.js';
 import InputView from '../views/InputView.js';
 import OutputView from '../views/OutputView.js';
 import Lotto from './Lotto.js';
+import Validator from "../utils/Validator.js";
 
 class LottoGame {
     #lottoGenerator;
@@ -51,9 +52,7 @@ class LottoGame {
         while (true) {
             try {
                 const bonusNumber = await InputView.readBonusNumber();
-                if (winningLotto.getNumbers().includes(bonusNumber)) {
-                    throw new Error('[ERROR] 보너스 번호는 당첨 번호와 중복될 수 없습니다.');
-                }
+                Validator.validateBonusNumber(bonusNumber, winningLotto.getNumbers());
                 return bonusNumber;
             } catch (error) {
                 Console.print(error.message);

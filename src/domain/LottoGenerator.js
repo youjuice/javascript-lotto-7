@@ -1,5 +1,6 @@
 import { Random } from "@woowacourse/mission-utils";
 import Lotto from "./Lotto.js";
+import Validator from "../utils/Validator.js";
 
 class LottoGenerator {
     #LOTTO_PRICE = 1000;
@@ -8,7 +9,7 @@ class LottoGenerator {
     #LOTTO_SIZE = 6;
 
     generate(amount) {
-        this.#validateAmount(amount);
+        Validator.validatePurchaseAmount(amount);
 
         const lottoCount = amount / this.#LOTTO_PRICE;
         const lottos = [];
@@ -23,16 +24,6 @@ class LottoGenerator {
         }
 
         return lottos;
-    }
-
-    #validateAmount(amount) {
-        if (amount < this.#LOTTO_PRICE) {
-            throw new Error('[ERROR] 구매 금액은 1000원 이상이어야 합니다.');
-        }
-
-        if (amount % this.#LOTTO_PRICE !== 0) {
-            throw new Error('[ERROR] 구매 금액은 1000원 단위여야 합니다.');
-        }
     }
 }
 
