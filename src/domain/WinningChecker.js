@@ -1,10 +1,10 @@
 class WinningChecker {
-    #LOTTO_PRICE = 1000;
-    #PRIZE_MONEY = {
+    static LOTTO_PRICE = 1000;
+    static PRIZE_MONEY = {
         3: 5000,
         4: 50000,
         5: 1500000,
-        5.5: 30000000,  // 5개 + 보너스볼
+        5.5: 30000000,
         6: 2000000000
     };
 
@@ -16,36 +16,49 @@ class WinningChecker {
         this.#bonusNumber = bonusNumber;
     }
 
-    checkLotto(purchasedLotto) {
-        return this.#winningLotto.getMatchCount(purchasedLotto.getNumbers());
-    }
-
-    hasBonus(purchasedLotto) {
-        return purchasedLotto.hasBonus(this.#bonusNumber);
-    }
-
     createWinningStatistics(purchasedLottos) {
         const matches = this.#initializeMatches();
-        let totalPrize = 0;
+        const totalPrize = this.#calculateTotalPrize(purchasedLottos, matches);
+        const profitRate = this.#calculateProfitRate(totalPrize, purchasedLottos.length);
 
-        purchasedLottos.forEach(lotto => {
-            const matchCount = this.checkLotto(lotto);
-            if (matchCount === 5 && this.hasBonus(lotto)) {
-                matches[5.5]++;
-                totalPrize += this.#PRIZE_MONEY[5.5];
-            } else if (matchCount >= 3) {
-                matches[matchCount]++;
-                totalPrize += this.#PRIZE_MONEY[matchCount];
-            }
-        });
+        return { matches, profitRate };
+    }
 
-        const totalPurchaseAmount = purchasedLottos.length * this.#LOTTO_PRICE;
-        const profitRate = (totalPrize / totalPurchaseAmount * 100).toFixed(1);
+    #calculateTotalPrize(purchasedLottos, matches) {
+        return purchasedLottos.reduce((total, lotto) => {
+            const prize = this.#getPrizeForLotto(lotto, matches);
+            return total + prize;
+        }, 0);
+    }
 
-        return {
-            matches,
-            profitRate: parseFloat(profitRate)
-        };
+    #getPrizeForLotto(lotto, matches) {
+        const matchCount = this.checkLotto(lotto);
+        const rank = this.#determineRank(matchCount, this.hasBonus(lotto));
+
+        if (!rank) {
+            return 0;
+        }
+
+        matches[rank]++;
+        return WinningChecker.PRIZE_MONEY[rank];
+    }
+
+    #determineRank(matchCount, hasBonus) {
+        if (matchCount === 6) {
+            return 6;
+        }
+        if (matchCount === 5 && hasBonus) {
+            return 5.5;
+        }
+        if (matchCount >= 3) {
+            return matchCount;
+        }
+        return null;
+    }
+
+    #calculateProfitRate(totalPrize, lottoCount) {
+        const totalPurchaseAmount = lottoCount * WinningChecker.LOTTO_PRICE;
+        return parseFloat((totalPrize / totalPurchaseAmount * 100).toFixed(1));
     }
 
     #initializeMatches() {
@@ -56,6 +69,14 @@ class WinningChecker {
             5.5: 0,
             6: 0
         };
+    }
+
+    checkLotto(purchasedLotto) {
+        return this.#winningLotto.getMatchCount(purchasedLotto.getNumbers());
+    }
+
+    hasBonus(purchasedLotto) {
+        return purchasedLotto.hasBonus(this.#bonusNumber);
     }
 }
 
