@@ -15,49 +15,54 @@ class LottoGame {
 
     async play() {
         const purchasedLottos = await this.#purchaseLottos();
+        await this.#showLottoResult(purchasedLottos);
+    }
+
+    async #showLottoResult(purchasedLottos) {
         OutputView.printPurchasedLottos(purchasedLottos);
 
         const winningLotto = await this.#getWinningLotto();
         const bonusNumber = await this.#getBonusNumber(winningLotto);
 
-        const winningChecker = new WinningChecker(winningLotto, bonusNumber);
-        const statistics = winningChecker.createWinningStatistics(purchasedLottos);
-
+        const statistics = this.#calculateStatistics(winningLotto, bonusNumber, purchasedLottos);
         OutputView.printWinningStatistics(statistics);
     }
 
-    async #purchaseLottos() {
+    async #retryOnError(operation) {
         while (true) {
             try {
-                const amount = await InputView.readPurchaseAmount();
-                return this.#lottoGenerator.generate(amount);
+                return await operation();
             } catch (error) {
                 Console.print(error.message);
             }
         }
+    }
+
+    async #purchaseLottos() {
+        return this.#retryOnError(async () => {
+            const amount = await InputView.readPurchaseAmount();
+            return this.#lottoGenerator.generate(amount);
+        });
     }
 
     async #getWinningLotto() {
-        while (true) {
-            try {
-                const winningNumbers = await InputView.readWinningNumbers();
-                return new Lotto(winningNumbers);
-            } catch (error) {
-                Console.print(error.message);
-            }
-        }
+        return this.#retryOnError(async () => {
+            const winningNumbers = await InputView.readWinningNumbers();
+            return new Lotto(winningNumbers);
+        });
     }
 
     async #getBonusNumber(winningLotto) {
-        while (true) {
-            try {
-                const bonusNumber = await InputView.readBonusNumber();
-                Validator.validateBonusNumber(bonusNumber, winningLotto.getNumbers());
-                return bonusNumber;
-            } catch (error) {
-                Console.print(error.message);
-            }
-        }
+        return this.#retryOnError(async () => {
+            const bonusNumber = await InputView.readBonusNumber();
+            Validator.validateBonusNumber(bonusNumber, winningLotto.getNumbers());
+            return bonusNumber;
+        });
+    }
+
+    #calculateStatistics(winningLotto, bonusNumber, purchasedLottos) {
+        const winningChecker = new WinningChecker(winningLotto, bonusNumber);
+        return winningChecker.createWinningStatistics(purchasedLottos);
     }
 }
 
